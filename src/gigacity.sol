@@ -9,7 +9,7 @@ import "ERC721A/extensions/ERC721AQueryable.sol";
 import "solmate/utils/MerkleProofLib.sol";
 import "solmate/utils/ReentrancyGuard.sol";
 import "solmate/utils/LibString.sol";
-import "@openzeppelin/access/Ownable.sol";
+import "openzeppelin-contracts/access/Ownable.sol";
 
 // =============================================================
 //
