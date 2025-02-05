@@ -26,7 +26,7 @@ import "openzeppelin-contracts/access/Ownable.sol";
 //
 // Yo! Welcome to Giga City, a place that's seen it all. This
 // city was once vibrant, but it fell victim to greed
-// and government's insatiable need for control. Misguided policies
+// and insatiable need for control. Misguided policies
 // and a relentless pursuit of wealth centralization sparked social
 // unrest, changing the city forever. Now, Giga City stands as a
 // testament to what can happen when the balance is lost.
@@ -64,13 +64,13 @@ contract MemoryChip is
     Ownable {
 
     // What is the cap?
-    uint256 private _supplyCap;
+    uint256 public supplyCap;
 
     // How many NFTs we want ppl to mint?
-    uint256 private _maxMintPerAddress;
+    uint256 public maxMintPerAddress;
 
     // Same price for everyone.
-    uint256 private _mintPrice;
+    uint256 public mintPrice;
 
     // Corpos second
     bool public corpoMint;
@@ -91,7 +91,7 @@ contract MemoryChip is
     bool public canImplant;
 
     // Where is GC at?
-    address private _gigaCityContract;
+    address public gigaCityContract;
 
     // Users cant trade the NFT by default
     bool public businessOpen = false;
@@ -107,8 +107,8 @@ contract MemoryChip is
         "Memory Chip",
         "MC"
     ) Ownable(msg.sender) {
-        _supplyCap = supplyCap_;
-        _maxMintPerAddress = maxMintPerAddress_;
+        supplyCap = supplyCap_;
+        maxMintPerAddress = maxMintPerAddress_;
     }
 
     // =============================================================
@@ -125,7 +125,7 @@ contract MemoryChip is
         // Burn this token.
         _burn(cardId_, true);
         // We will be using other contract.
-        GigaCityContract factory = GigaCityContract(_gigaCityContract);
+        GigaCityContract factory = GigaCityContract(gigaCityContract);
         // And finally mint a new one.
         factory.implant(_msgSenderERC721A());
     }
@@ -136,17 +136,17 @@ contract MemoryChip is
 
     function _isWithinSupply(uint256 quantity_) private view {
         // Are we exceeding our supply cap?
-        if (_supplyCap < _totalMinted() - 0 + quantity_) revert SupplyExceeded();
+        if (supplyCap < _totalMinted() - 0 + quantity_) revert SupplyExceeded();
     }
 
     function _isWithinWalletLimit(uint256 quantity_) private view {
         // Did the user already exceed the allowed limit?
-        if (_numberMinted(_msgSenderERC721A()) + quantity_ > _maxMintPerAddress) revert AddressQuantityExceeded();
+        if (_numberMinted(_msgSenderERC721A()) + quantity_ > maxMintPerAddress) revert AddressQuantityExceeded();
     }
 
     function _hasEnoughCash(uint256 quantity_) private view {
         // Are you sending enough cash for mint?
-        if (msg.value < _mintPrice * quantity_) revert NoCashForMint();
+        if (msg.value < mintPrice * quantity_) revert NoCashForMint();
     }
 
     // =============================================================
@@ -245,7 +245,7 @@ contract MemoryChip is
     }
 
     function setGigaCityContract(address contractAddress_) external onlyOwner {
-        _gigaCityContract = contractAddress_;
+        gigaCityContract = contractAddress_;
     }
 
     function setCorpoRoot(bytes32 newRoot_) external onlyOwner {
@@ -253,11 +253,11 @@ contract MemoryChip is
     }
 
     function setMaxMintPerAddress(uint256 maxMintPerAddress_) external onlyOwner {
-        _maxMintPerAddress = maxMintPerAddress_;
+        maxMintPerAddress = maxMintPerAddress_;
     }
 
     function setMintPrice(uint256 mintPrice_) external onlyOwner {
-        _mintPrice = mintPrice_;
+        mintPrice = mintPrice_;
     }
 
     function toggleCorpoMint() public onlyOwner {
