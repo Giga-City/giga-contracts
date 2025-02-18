@@ -43,7 +43,7 @@ abstract contract GigaCityContract {
 //                            ERRORS
 // =============================================================
 
-error TransferFailed();
+error MCWithdrawlFailed();
 error NoCashForMint();
 error SupplyExceeded();
 error NoCorpoMintYet();
@@ -294,7 +294,7 @@ contract MemoryChip is
 
     function withdraw() external onlyOwner nonReentrant() {
         (bool success, ) = msg.sender.call{value: address(this).balance}("");
-        if (!success) revert TransferFailed();
+        if (!success) revert MCWithdrawlFailed();
     }
 
     // =============================================================

@@ -5,7 +5,7 @@ pragma solidity ^0.8.24;
 //                           ROCKSTARS
 // =============================================================
 
-import "ERC721A/extensions/ERC721AQueryable.sol";
+import "erc721a/extensions/ERC721AQueryable.sol";
 import "solmate/utils/MerkleProofLib.sol";
 import "solmate/utils/ReentrancyGuard.sol";
 import "solmate/utils/LibString.sol";
@@ -38,9 +38,9 @@ import "openzeppelin-contracts/access/Ownable.sol";
 //                            ERRORS
 // =============================================================
 
-error ChipDoesNotExist();
+error CitizenDoesNotExist();
 error NotAMemoryChip();
-error TransferFailed();
+error GCWithdrawlFailed();
 error PunkNotStaked();
 error PunkIsStaked();
 error NotYourPunk();
@@ -107,7 +107,7 @@ contract GigaCity is
     }
 
     function tokenURI(uint256 tokenId_) public view virtual override(ERC721A, IERC721A) returns (string memory) {
-        if (!_exists(tokenId_)) revert ChipDoesNotExist();
+        if (!_exists(tokenId_)) revert CitizenDoesNotExist();
 
         string memory currentBaseURI = _baseURI();
         return bytes(currentBaseURI).length > 0
@@ -150,7 +150,7 @@ contract GigaCity is
 
     function withdraw() external onlyOwner nonReentrant() {
         (bool success, ) = msg.sender.call{value: address(this).balance}("");
-        if (!success) revert TransferFailed();
+        if (!success) revert GCWithdrawlFailed();
     }
 
     // =============================================================
