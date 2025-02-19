@@ -7,7 +7,7 @@ import "../src/filthypeasants.sol";
 import "../src/gigacity.sol";
 import "../src/memorychip.sol";
 
-contract TestSetup is Test {
+contract DeploySetup is Test {
     FilthyPeasants public filthyPeasants;
     GigaCity public gigaCity;
     MemoryChip public memoryChip;
@@ -17,6 +17,9 @@ contract TestSetup is Test {
     address public user1;
     address public user2;
     address public user3;
+
+    uint256 public mcSupplyCap = 10;    
+    uint256 public mcMintPerAddy = 2;
 
     // Shared setup logic runs before every test.
     function setUp() public virtual {
@@ -33,7 +36,7 @@ contract TestSetup is Test {
 
         // Deploy MyContract with an initial value and the owner.
         filthyPeasants = new FilthyPeasants('FitlyPeasants', 'Filthy', 0, 333, 10);
-        memoryChip = new MemoryChip(10_000, 4);
+        memoryChip = new MemoryChip(mcSupplyCap, 1);
         gigaCity = new GigaCity(address(memoryChip));
     }
 }

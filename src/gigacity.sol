@@ -56,7 +56,7 @@ contract GigaCity is
     Ownable {
 
     // Where is MC at?
-    address private _memoryChipContract;
+    address public memoryChipContract;
 
     // Where are our assets hosted?
     string private _baseTokenURI;
@@ -79,7 +79,7 @@ contract GigaCity is
         "Giga City",
         "GC"
     ) Ownable(msg.sender) {
-        _memoryChipContract = memoryChipContract_;
+        memoryChipContract = memoryChipContract_;
         initiateCountdown = false;
     }
 
@@ -89,7 +89,7 @@ contract GigaCity is
 
     function implant(address to) external nonReentrant() {
         // it needs to be the MC contract
-        if (_msgSenderERC721A() != _memoryChipContract) revert NotAMemoryChip();
+        if (_msgSenderERC721A() != memoryChipContract) revert NotAMemoryChip();
         // Safe mint since minting through contract
         _safeMint(to, 1);
     }
