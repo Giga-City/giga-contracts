@@ -16,7 +16,7 @@ contract DeployTest is DeploySetup {
         assertEq(memoryChip.symbol(), 'MC', "Wrong Memory chip symbol");
         assertEq(memoryChip.supplyCap(), mcSupplyCap, "Wrong supply cap");
         assertEq(memoryChip.maxMintPerAddress(), 1, "Wron max mint per address");
-        assertEq(memoryChip.owner(), owner, "Wrong mc contract owner");
+        assertEq(memoryChip.owner(), owner, "Wrong MC contract owner");
     }
 
     function testGigaCityValues() public view {
@@ -24,5 +24,6 @@ contract DeployTest is DeploySetup {
         assertEq(gigaCity.symbol(), 'GC', "Wrong Giga City symbol");
         assertEq(gigaCity.memoryChipContract(), address(memoryChip), "Wrong Memory chip contract");
         assertEq(gigaCity.initiateCountdown(), false, "Wrong countdown state");
+        assertEq(gigaCity.owner(), owner, "Wrong GC contract owner");
     }
 }
