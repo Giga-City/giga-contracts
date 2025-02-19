@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 // =============================================================
 //                           ROCKSTARS
@@ -38,21 +38,6 @@ import "openzeppelin-contracts/access/Ownable.sol";
 abstract contract GigaCityContract {
     function implant(address to) external virtual;
 }
-
-// =============================================================
-//                            ERRORS
-// =============================================================
-
-error MCWithdrawlFailed();
-error NoCashForMint();
-error SupplyExceeded();
-error NoCorpoMintYet();
-error CantMintCorpo();
-error NoBotMintYet();
-error YouCantImplantNow();
-error AddressQuantityExceeded();
-error ChipDoesNotExist();
-error BusinessClosed();
 
 // =============================================================
 //                           Memory Chip
@@ -95,6 +80,21 @@ contract MemoryChip is
 
     // Users cant trade the NFT by default
     bool public businessOpen = false;
+
+    // =============================================================
+    //                            ERRORS
+    // =============================================================
+
+    error WithdrawlFailed();
+    error NoCashForMint();
+    error SupplyExceeded();
+    error NoCorpoMintYet();
+    error CantMintCorpo();
+    error NoBotMintYet();
+    error YouCantImplantNow();
+    error AddressQuantityExceeded();
+    error ChipDoesNotExist();
+    error BusinessClosed();
 
     // =============================================================
     //                            CONSTRUCTOR
@@ -294,7 +294,7 @@ contract MemoryChip is
 
     function withdraw() external onlyOwner nonReentrant() {
         (bool success, ) = msg.sender.call{value: address(this).balance}("");
-        if (!success) revert MCWithdrawlFailed();
+        if (!success) revert WithdrawlFailed();
     }
 
     // =============================================================

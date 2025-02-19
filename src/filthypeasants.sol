@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.20;
 
 // Thanks Azuki Team for the optimized contract <3
 import "erc721a/extensions/ERC721AQueryable.sol";

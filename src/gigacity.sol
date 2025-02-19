@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 // =============================================================
 //                           ROCKSTARS
@@ -35,18 +35,6 @@ import "openzeppelin-contracts/access/Ownable.sol";
 // revealed. 50b ...
 
 // =============================================================
-//                            ERRORS
-// =============================================================
-
-error CitizenDoesNotExist();
-error NotAMemoryChip();
-error GCWithdrawlFailed();
-error PunkNotStaked();
-error PunkIsStaked();
-error NotYourPunk();
-error StakingClosed();
-
-// =============================================================
 //                       GIGA CITY PUNKS
 // =============================================================
 
@@ -68,6 +56,18 @@ contract GigaCity is
     // While it is most likely an overkill to include something like this
     // in a contract, it is transparent.
     bool public initiateCountdown;
+
+    // =============================================================
+    //                            ERRORS
+    // =============================================================
+
+    error CitizenDoesNotExist();
+    error NotAMemoryChip();
+    error WithdrawlFailed();
+    error PunkNotStaked();
+    error PunkIsStaked();
+    error NotYourPunk();
+    error StakingClosed();
 
     // =============================================================
     //                            CONSTRUCTOR
@@ -150,7 +150,7 @@ contract GigaCity is
 
     function withdraw() external onlyOwner nonReentrant() {
         (bool success, ) = msg.sender.call{value: address(this).balance}("");
-        if (!success) revert GCWithdrawlFailed();
+        if (!success) revert WithdrawlFailed();
     }
 
     // =============================================================
