@@ -34,4 +34,17 @@ contract MemoryChipTest is MCSetup {
         // This should pass as it is within supply
         memoryChip.mintTreasury(owner, mcSupplyCap - 2);
     }
+
+    function testCorpoMint() public {
+        memoryChip.toggleCorpoMint();
+
+        vm.prank(user1);
+        bytes32[] memory proof = getProof(user1);
+        memoryChip.mintCorpo{value: 0.01 ether}(proof, 1);
+
+        vm.prank(user3);
+        bytes32[] memory proof2 = getProof(user1);
+        vm.expectRevert(MemoryChip.CantMintCorpo.selector);
+        memoryChip.mintCorpo{value: 0.01 ether}(proof2, 1);
+    }
 }

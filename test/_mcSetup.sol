@@ -9,6 +9,8 @@ contract MCSetup is DeploySetup {
       super.setUp();
 
       // ****** BASICS ****** //
+
+      uint256 mintPrice = 0.01 ether;
       
       // Metadata
       memoryChip.setBaseURI('https://test.com/');
@@ -16,7 +18,7 @@ contract MCSetup is DeploySetup {
 
       // Minting related information
       memoryChip.setMaxMintPerAddress(mcMintPerAddy);
-      memoryChip.setMintPrice(0.01 ether);
+      memoryChip.setMintPrice(mintPrice);
 
       // ****** WHITELIST ****** //
 
@@ -32,6 +34,25 @@ contract MCSetup is DeploySetup {
 
       // ****** Setup GC ****** //
       memoryChip.setGigaCityContract(address(memoryChip));
+  }
+
+  function getProof(address user) public view returns (bytes32[] memory proof) {
+    // Compute leaves.
+    bytes32 leaf1 = keccak256(abi.encodePacked(user1));
+    bytes32 leaf2 = keccak256(abi.encodePacked(user2));
+    
+    // For a two-leaf tree, the proof for user1 is just [leaf2]
+    // and for user2 it is [leaf1].
+    if (user == user1) {
+        proof = new bytes32[](1);
+        proof[0] = leaf2;
+    } else if (user == user2) {
+        proof = new bytes32[](1);
+        proof[0] = leaf1;
+    } else {
+        // If the user is not whitelisted, return an empty proof.
+        proof = new bytes32[](0);
+    }
   }
 
   function _hashPair(bytes32 a, bytes32 b) internal pure returns (bytes32) {
