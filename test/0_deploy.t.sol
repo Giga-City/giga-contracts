@@ -17,6 +17,7 @@ contract DeployTest is DeploySetup {
         assertEq(memoryChip.supplyCap(), mcSupplyCap, "Wrong supply cap");
         assertEq(memoryChip.maxMintPerAddress(), 1, "Wron max mint per address");
         assertEq(memoryChip.owner(), owner, "Wrong MC contract owner");
+        assertEq(memoryChip.filthyContract(), address(filthyPeasants), "Wrong Filthy contract");
     }
 
     function testGigaCityValues() public view {

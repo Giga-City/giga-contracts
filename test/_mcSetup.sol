@@ -9,12 +9,10 @@ contract MCSetup is DeploySetup {
       super.setUp();
 
       // ****** BASICS ****** //
-
-      uint256 mintPrice = 0.01 ether;
       
       // Metadata
-      memoryChip.setBaseURI('https://test.com/');
-      memoryChip.setURISuffix('.json');
+      memoryChip.setBaseURI(baseURI);
+      memoryChip.setURISuffix(URISuffix);
 
       // Minting related information
       memoryChip.setMaxMintPerAddress(mcMintPerAddy);
@@ -33,7 +31,7 @@ contract MCSetup is DeploySetup {
       memoryChip.setCorpoRoot(merkleRoot);
 
       // ****** Setup GC ****** //
-      memoryChip.setGigaCityContract(address(memoryChip));
+      memoryChip.setGigaCityContract(address(gigaCity));
   }
 
   function getProof(address user) public view returns (bytes32[] memory proof) {

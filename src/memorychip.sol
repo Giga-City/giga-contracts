@@ -31,12 +31,25 @@ import "openzeppelin-contracts/access/Ownable.sol";
 // unrest, changing the city forever. Now, Giga City stands as a
 // testament to what can happen when the balance is lost.
 
+// ... mfer. Listen. I really appreciate you checking out the project.
+// Not sure how you got here, or if GC is released already or not. But
+// I have been working on GC almost every night for a while now. I've
+// poured every last drip of blood and sweat into this thing so I hope
+// it fucking shows. No matter if you own this GC or not, no matter
+// if you just flip it and move on or hold. Thank you for checking it out.
+//
+// But I'll do everything that I can to get you on this ship with me!
+
 // =============================================================
 //                          ASSOCIATES
 // =============================================================
 
 abstract contract GigaCityContract {
     function implant(address to) external virtual;
+}
+
+abstract contract FilthyPeasantsContract {
+    function ownerOf(uint tokenId) external virtual view returns(address);
 }
 
 // =============================================================
@@ -48,6 +61,8 @@ contract MemoryChip is
     ReentrancyGuard,
     Ownable {
 
+    // █▒░ GENERAL ░▒█
+
     // What is the cap?
     uint256 public supplyCap;
 
@@ -57,20 +72,14 @@ contract MemoryChip is
     // Same price for everyone.
     uint256 public mintPrice;
 
-    // Corpos second
-    bool public corpoMint;
-
-    // Corpo merkle root
-    bytes32 private _corpoRoot;
-
-    // If it gets to its public last
-    bool public botMint;
-
     // Where are our assets hosted?
     string private _baseTokenURI;
     
     // Once/if we will transition to IPFS this will come in handy
     string private _uriSuffix = '';
+
+    // Users cant trade the NFT by default
+    bool public businessOpen;
 
     // Let's get on with it
     bool public canImplant;
@@ -78,35 +87,64 @@ contract MemoryChip is
     // Where is GC at?
     address public gigaCityContract;
 
-    // Users cant trade the NFT by default
-    bool public businessOpen = false;
+    // █▒░ PEASANTS ░▒█
+
+    // Filthy fucking peasants.
+    bool public filthyMint;
+
+    // How many peasants have minted?
+    uint256 private _filthyMintCounter;
+
+    // Where the peasants at?
+    address public filthyContract;
+
+    // Mapping all the peasants that have minted.
+    mapping(uint256 => bool) private _peasantsMinted;
+
+    // █▒░ CORPO ░▒█
+
+    // Corpos second
+    bool public corpoMint;
+
+    // Corpo merkle root
+    bytes32 private _corpoRoot;
+
+    // █▒░ BOT ░▒█
+
+    // If it gets to its public last
+    bool public botMint;
 
     // =============================================================
     //                            ERRORS
     // =============================================================
 
+    error BusinessClosed();
     error WithdrawlFailed();
     error NoCashForMint();
     error SupplyExceeded();
-    error NoCorpoMintYet();
-    error CantMintCorpo();
-    error NoBotMintYet();
-    error YouCantImplantNow();
     error AddressQuantityExceeded();
+    error NoFilthyMintYet();
+    error NoCorpoMintYet();
+    error NoBotMintYet();
+    error CantMintThisFilthy();
+    error CantMintCorpo();
+    error CantImplantNow();
+    error PeasantAlreadyMinted();
     error ChipDoesNotExist();
-    error BusinessClosed();
 
     // =============================================================
     //                            CONSTRUCTOR
     // =============================================================
 
     constructor(
+        address filthyContract_,
         uint256 supplyCap_,
         uint256 maxMintPerAddress_
     ) ERC721A(
         "Memory Chip",
         "MC"
     ) Ownable(msg.sender) {
+        filthyContract = filthyContract_;
         supplyCap = supplyCap_;
         maxMintPerAddress = maxMintPerAddress_;
     }
@@ -117,10 +155,11 @@ contract MemoryChip is
 
     function implant(uint256 cardId_) external nonReentrant() {
         // If implanting is closed, you can't make a deal brother.
-        if (!canImplant) revert YouCantImplantNow();
+        if (!canImplant) revert CantImplantNow();
         // If you are not owner you can't make a deal.
         // We don't need to check the ownership here.
         // _burn will revert if you are not the owner.
+        // Thus I think we can comment this shit out.
         // if (_msgSenderERC721A() != ownerOf(cardId_)) revert NotYourMemoryChip();
         // Burn this token.
         _burn(cardId_, true);
@@ -135,8 +174,8 @@ contract MemoryChip is
     // =============================================================
 
     function _isWithinSupply(uint256 quantity_) private view {
-        // Are we exceeding our supply cap?
-        if (supplyCap < _totalMinted() - 0 + quantity_) revert SupplyExceeded();
+        // Are we exceeding our supply cap? The supply of filthy peasants is capped at 333.
+        if (supplyCap < _totalMinted() + quantity_ - _filthyMintCounter) revert SupplyExceeded();
     }
 
     function _isWithinWalletLimit(uint256 quantity_) private view {
@@ -159,6 +198,32 @@ contract MemoryChip is
         _isWithinSupply(quantity_);
         // We mint for free
         _mint(address_, quantity_);
+    }
+
+    // =============================================================
+    //                           MINT FILTHY
+    // =============================================================
+
+    // How are peasants going to mint? Mfers mint filthy!
+    function mintFilthy(uint256 peasantId_) external {
+        // Is filthy mint on?
+        if (!filthyMint) revert NoFilthyMintYet();
+        // Are we exceeding a supply cap?
+        // I don't think we need to check. There is only 333 peasants
+        // and the supply cannot be changed. In fact checking the total
+        // supply would make the code unnecessarily complicated since
+        // peasants need reserved capacity to mint.
+        // _isWithinSupply(_quantity);
+        // Are you filthy?
+        if (FilthyPeasantsContract(filthyContract).ownerOf(peasantId_) != _msgSenderERC721A()) revert CantMintThisFilthy();
+        // Has the peasant been redeemed?
+        if (_peasantsMinted[peasantId_] == true) revert PeasantAlreadyMinted();
+        // If not, it is redeemed now
+        _peasantsMinted[peasantId_] = true;
+        // We need to know how many filthys have minted
+        _filthyMintCounter += 1;
+        // And we finally mint.
+        _mint(_msgSenderERC721A(), 2);
     }
 
     // =============================================================
@@ -209,6 +274,14 @@ contract MemoryChip is
 
     function totalChipsImplanted() external view returns (uint256) {
         return _totalBurned();
+    }
+
+    function peasantMinted(uint256 peasantId_) external view returns (bool) {
+        return _peasantsMinted[peasantId_] == true;
+    }
+
+    function totalPeasantsMinted() external view returns (uint256) {
+        return _filthyMintCounter;
     }
 
     // =============================================================
@@ -270,6 +343,10 @@ contract MemoryChip is
 
     function toggleImplant() external onlyOwner {
         canImplant = !canImplant;
+    }
+
+    function toggleFilthyMint() public onlyOwner {
+        filthyMint = !filthyMint;
     }
 
     function openBusiness() external onlyOwner {

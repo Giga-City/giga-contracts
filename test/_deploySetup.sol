@@ -20,6 +20,9 @@ contract DeploySetup is Test {
 
     uint256 public mcSupplyCap = 10;    
     uint256 public mcMintPerAddy = 2;
+    uint256 public mintPrice = 0.01 ether;
+    string public baseURI = 'https://test.com/';
+    string public URISuffix = '.json';
 
     // Shared setup logic runs before every test.
     function setUp() public virtual {
@@ -35,8 +38,8 @@ contract DeploySetup is Test {
         vm.deal(user3, 1 ether);
 
         // Deploy MyContract with an initial value and the owner.
-        filthyPeasants = new FilthyPeasants('FitlyPeasants', 'Filthy', 0, 333, 10);
-        memoryChip = new MemoryChip(mcSupplyCap, 1);
+        filthyPeasants = new FilthyPeasants('FitlyPeasants', 'Filthy', 0, 2, 1);
+        memoryChip = new MemoryChip(address(filthyPeasants),mcSupplyCap, 1);
         gigaCity = new GigaCity(address(memoryChip));
     }
 }
