@@ -24,7 +24,7 @@ contract DeployTest is DeploySetup {
         assertEq(gigaCity.name(), 'Giga City', "Wrong Giga City deploy name");
         assertEq(gigaCity.symbol(), 'GC', "Wrong Giga City symbol");
         assertEq(gigaCity.memoryChipContract(), address(memoryChip), "Wrong Memory chip contract");
-        assertEq(gigaCity.initiateCountdown(), false, "Wrong countdown state");
+        assertEq(gigaCity.countdownInitiated(), false, "Wrong countdown state");
         assertEq(gigaCity.owner(), owner, "Wrong GC contract owner");
     }
 }

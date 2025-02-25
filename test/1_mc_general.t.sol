@@ -22,7 +22,7 @@ contract MemoryChipTest is MCSetup {
         memoryChip.tokenURI(1);
         assertEq(memoryChip.tokenURI(1), string.concat(baseURI,'1', URISuffix), "The expected URL should be correct");
 
-        string memory newBaseUri = 'http://yee.co';
+        string memory newBaseUri = 'http://yee.co/';
         string memory newSuffix = '';
 
         memoryChip.setBaseURI(newBaseUri);
@@ -213,4 +213,41 @@ contract MemoryChipTest is MCSetup {
         memoryChip.toggleImplant();
         assertEq(memoryChip.canImplant(), true, "Implant should be set to true");
     }
+}
+
+// =============================================================
+//                      WITHDRAW FAILED COVERAGE
+// =============================================================
+
+// A helper contract that reverts on receiving Ether.
+contract RevertReceiver  {
+    // Fallback function that always reverts
+    fallback() external payable {
+        revert("I don't accept Ether");
+    }
+}
+
+contract WithDrawTest is MCSetup {
+
+    function setUp() public override {
+        super.setUp();
+    }
+
+        // Test a failing withdrawal:
+    // When the owner is a contract that reverts on receiving Ether, the withdraw call should revert.
+    function testWithdrawFailure() public {
+        // Fund the MemoryChip contract with 1 ether.
+        vm.deal(address(memoryChip), 1 ether);
+
+        // Deploy a helper contract that refuses to accept Ether.
+        RevertReceiver revertReceiver = new RevertReceiver();
+
+        // Transfer ownership of MemoryChip to the revertReceiver.
+        memoryChip.transferOwnership(address(revertReceiver));
+
+        vm.prank(address(revertReceiver));
+        vm.expectRevert(MemoryChip.WithdrawlFailed.selector);
+        memoryChip.withdraw();
+    }
+
 }

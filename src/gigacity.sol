@@ -55,7 +55,7 @@ contract GigaCity is
     // This is not used for anything in this contract.
     // While it is most likely an overkill to include something like this
     // in a contract, it is transparent.
-    bool public initiateCountdown;
+    bool public countdownInitiated;
 
     // =============================================================
     //                            ERRORS
@@ -80,7 +80,7 @@ contract GigaCity is
         "GC"
     ) Ownable(msg.sender) {
         memoryChipContract = memoryChipContract_;
-        initiateCountdown = false;
+        countdownInitiated = false;
     }
 
     // =============================================================
@@ -127,8 +127,8 @@ contract GigaCity is
         _uriSuffix = uriSuffix_;
     }
 
-    function setCountdown(bool newCountdown_) public onlyOwner {
-        initiateCountdown = newCountdown_;
+    function initiateCountdown() public onlyOwner {
+        countdownInitiated = true;
     }
 
 
