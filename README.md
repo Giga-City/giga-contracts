@@ -13,3 +13,9 @@ Includes various contracts from Giga City ecosystem. Written in solidity, mainta
 - `$ forge test` - Run tests
 - `$ forge coverage` - Run tests and show test coverage
 - `$ forge snapshot` - Gas snapshot
+
+## Contracts
+
+- `memorychip.sol` - Contract for minting unrevealed Giga City assets.
+- `gigacity.sol` - Contract for revealed Giga City assets.
+- `filthypeasants.sol` - Contract is included for testing Filthy minting of MCs.
