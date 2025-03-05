@@ -9,6 +9,8 @@ Foundry consists of:
 -   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
 -   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
 
+To get the bytecode, run: `forge script script/GetByteCode.sol --sig "testGetInitHash()"`
+
 ## Documentation
 
 https://book.getfoundry.sh/
