@@ -131,6 +131,7 @@ contract MemoryChip is
     error CantImplantNow();
     error PeasantAlreadyMinted();
     error ChipDoesNotExist();
+    error CantIncreaseSupply();
 
     // =============================================================
     //                            CONSTRUCTOR
@@ -331,6 +332,12 @@ contract MemoryChip is
 
     function setMintPrice(uint256 mintPrice_) external onlyOwner {
         mintPrice = mintPrice_;
+    }
+
+    function setSupplyCap(uint256 supplyCap_) external onlyOwner {
+        if (supplyCap_ > supplyCap) revert CantIncreaseSupply();
+
+        supplyCap = supplyCap_;
     }
 
     function toggleCorpoMint() public onlyOwner {

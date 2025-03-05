@@ -79,6 +79,15 @@ contract MemoryChipTest is MCSetup {
         assertEq(memoryChip.maxMintPerAddress(), 20, "Should have correctly set max mint per address");
     }
 
+    function testSetSupplyCap() public {
+        assertEq(memoryChip.supplyCap(), mcSupplyCap, "Should have correctly set max supply cap");
+
+        vm.expectRevert(MemoryChip.CantIncreaseSupply.selector);
+        memoryChip.setSupplyCap((mcSupplyCap + 1));
+        memoryChip.setSupplyCap(mcSupplyCap - 1);
+        assertEq(memoryChip.supplyCap(), mcSupplyCap - 1, "Should have correctly set max supply cap");
+    }
+
     function testSetMintPrice() public {
         // This should not pass as user1 is not owner
         vm.prank(user1);
