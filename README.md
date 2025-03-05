@@ -14,6 +14,8 @@ Includes various contracts from Giga City ecosystem. Written in solidity, mainta
 - `$ forge coverage` - Run tests and show test coverage
 - `$ forge snapshot` - Gas snapshot
 
+To get the bytecode, run: `forge script script/GetByteCode.sol --sig "testGetInitHash()"`
+
 ## Contracts
 
 - `memorychip.sol` - Contract for minting unrevealed Giga City assets.
