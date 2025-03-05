@@ -32,11 +32,11 @@ import "openzeppelin-contracts/access/Ownable.sol";
 // testament to what can happen when the balance is lost.
 
 // ... mfer. Listen. I really appreciate you checking out the project.
-// Not sure how you got here, or if GC is released already or not. But
-// I have been working on GC almost every night for a while now. I've
-// poured every last drip of blood and sweat into this thing so I hope
-// it fucking shows. No matter if you own this GC or not, no matter
-// if you just flip it and move on or hold. Thank you for checking it out.
+// Not sure how you got here. But I have been working on GC almost every
+// night for a while now. I've poured every last drip of blood and sweat
+// into this thing so I hope it fucking shows. No matter if you own this
+// GC or not, no matter if you just flip it and move on or hold. Thank
+// you for checking it out.
 //
 // But I'll do everything that I can to get you on this ship with me!
 
