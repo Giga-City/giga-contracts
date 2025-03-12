@@ -365,7 +365,7 @@ contract MemoryChip is
     // =============================================================
 
     /**
-     * @dev Override needed due to fonflict. Super.owner() returns
+     * Override needed due to fonflict. Super.owner() returns
      * direct parent, which in this case is Ownable contract.
      */
     function owner() public view virtual override(Ownable) returns (address) {

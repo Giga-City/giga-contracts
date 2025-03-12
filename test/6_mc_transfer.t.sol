@@ -40,7 +40,7 @@ contract MemoryChipTest is MCSetup {
         memoryChip.safeTransferFrom(user1, user2, 1, tmpBytes);
     }
 
-      function testCanSendWhenBusinessOpen() public {
+    function testCanSendWhenBusinessOpen() public {
         memoryChip.openBusiness();
 
         assertEq(memoryChip.ownerOf(1), user1, "User 1 should be the owner of the NFT");
