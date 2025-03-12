@@ -70,7 +70,13 @@ contract GigaCity is
     error StakingClosed();
 
     // =============================================================
-    //                            CONSTRUCTOR
+    //                            EVENTS
+    // =============================================================
+
+    event ChipImplanted(uint256 PunkId);
+
+    // =============================================================
+    //                           CONSTRUCTOR
     // =============================================================
 
     constructor(
@@ -84,7 +90,7 @@ contract GigaCity is
     }
 
     // =============================================================
-    //                          MAKING THE DEAL
+    //                         MAKING THE DEAL
     // =============================================================
 
     function implant(address to) external nonReentrant() {
@@ -92,10 +98,12 @@ contract GigaCity is
         if (_msgSenderERC721A() != memoryChipContract) revert NotAMemoryChip();
         // Safe mint since minting through contract
         _safeMint(to, 1);
+        // Chip is getting implanted
+        emit ChipImplanted(_nextTokenId() - 1);
     }
 
     // =============================================================
-    //                              METADATA
+    //                            METADATA
     // =============================================================
 
     function _startTokenId() internal view virtual override returns (uint256) {
@@ -116,7 +124,7 @@ contract GigaCity is
     }
 
     // =============================================================
-    //                              ADMIN
+    //                             ADMIN
     // =============================================================
 
     function setBaseURI(string calldata baseURI_) external onlyOwner {
