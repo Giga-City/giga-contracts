@@ -140,11 +140,12 @@ contract MemoryChip is
     constructor(
         address filthyContract_,
         uint256 supplyCap_,
-        uint256 maxMintPerAddress_
+        uint256 maxMintPerAddress_,
+        address owner_
     ) ERC721A(
         "Memory Chip",
         "MC"
-    ) Ownable(msg.sender) {
+    ) Ownable(owner_) {
         filthyContract = filthyContract_;
         supplyCap = supplyCap_;
         maxMintPerAddress = maxMintPerAddress_;

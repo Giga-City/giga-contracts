@@ -26,22 +26,22 @@ To get the bytecode, run: `forge script script/GetByteCode.sol --sig "testGetIni
 
 You can deploy the contracts with the following command:
 ```
-forge create MemoryChip --broadcast --rpc-url "{RPC}" --private-key {PK} --constructor-args {filthy_peasants_contract} {supply} {max mint per addy}
+forge create MemoryChip --broadcast --rpc-url "{RPC}" --private-key {PK} --constructor-args {filthy_peasants_contract} {supply} {max mint per addy} {owner}
 ```
 
 and then verify like follows:
 ```
-forge verify-contract {contract address} MemoryChip --chain-id {chain_id} --etherscan-api-key {etherscan api} --constructor-args $(cast abi-encode "constructor(address,uint256,uint256)" "{filthy_peasants_contract}" {supply} {max mint per addy})
+forge verify-contract {contract address} MemoryChip --chain-id {chain_id} --etherscan-api-key {etherscan api} --constructor-args $(cast abi-encode "constructor(address,uint256,uint256,address)" "{filthy_peasants_contract}" {supply} {max mint per addy} "{owner}")
 ```
 
 and GC contract:
 ```
-forge create GigaCity --broadcast --rpc-url "https://ethereum-sepolia-rpc.publicnode.com" --private-key {PK} --constructor-args {memory chip contract addy}
+forge create GigaCity --broadcast --rpc-url "https://ethereum-sepolia-rpc.publicnode.com" --private-key {PK} --constructor-args {memory chip contract addy} {owner}
 ```
 
 and then verify:
 ```
-forge verify-contract {contract address} GigaCity --chain-id {chain_id} --etherscan-api-key {etherscan api} --constructor-args $(cast abi-encode "constructor(address)" "{mc_contract}")
+forge verify-contract {contract address} GigaCity --chain-id {chain_id} --etherscan-api-key {etherscan api} --constructor-args $(cast abi-encode "constructor(address)" "{mc_contract}" "{owner}")
 ```
 
 ## Local Anvil testing

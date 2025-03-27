@@ -39,7 +39,7 @@ contract DeploySetup is Test {
 
         // Deploy MyContract with an initial value and the owner.
         filthyPeasants = new FilthyPeasants('FitlyPeasants', 'Filthy', 0, 2, 1);
-        memoryChip = new MemoryChip(address(filthyPeasants),mcSupplyCap, 1);
-        gigaCity = new GigaCity(address(memoryChip));
+        memoryChip = new MemoryChip(address(filthyPeasants),mcSupplyCap, 1, owner);
+        gigaCity = new GigaCity(address(memoryChip), owner);
     }
 }

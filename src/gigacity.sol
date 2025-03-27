@@ -80,11 +80,12 @@ contract GigaCity is
     // =============================================================
 
     constructor(
-        address memoryChipContract_
+        address memoryChipContract_,
+        address owner_
     ) ERC721A(
         "Giga City",
         "GC"
-    ) Ownable(msg.sender) {
+    ) Ownable(owner_) {
         memoryChipContract = memoryChipContract_;
         countdownInitiated = false;
     }

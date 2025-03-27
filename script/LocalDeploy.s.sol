@@ -31,10 +31,10 @@ contract Deploy is Script {
         console.log("FilthyPeasants deployed to:", address(filthyPeasants));
         filthyPeasants.setPaused(false);
 
-        MemoryChip memoryChip = new MemoryChip(address(filthyPeasants), 100, 10);
+        MemoryChip memoryChip = new MemoryChip(address(filthyPeasants), 100, 10, addr0);
         console.log("Memory Chip deployed to:", address(memoryChip));
 
-        GigaCity gigaCity = new GigaCity(address(memoryChip));
+        GigaCity gigaCity = new GigaCity(address(memoryChip), addr0);
         console.log("GigaCity deployed to:", address(gigaCity));
 
         memoryChip.setBaseURI('https://beacon-api.gigacity.org/mc/');
