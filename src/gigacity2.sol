@@ -8,7 +8,6 @@ pragma solidity ^0.8.20;
 import "erc721a/extensions/ERC721AQueryable.sol";
 import "solmate/utils/MerkleProofLib.sol";
 import "solmate/utils/ReentrancyGuard.sol";
-import "solmate/utils/LibString.sol";
 import "openzeppelin-contracts/access/Ownable.sol";
 
 // =============================================================
@@ -24,39 +23,26 @@ import "openzeppelin-contracts/access/Ownable.sol";
 //       ░  ░        ░       ░  ░░ ░       ░            ░ ░     
 //                              ░                      ░ ░     
 //
-// Yo! Welcome to Giga City, a place that's seen it all. This
+// Welcome to Giga City, a place that's seen it all. This
 // city was once vibrant, but it fell victim to greed
 // and insatiable need for control. Misguided policies
 // and a relentless pursuit of wealth centralization sparked social
 // unrest, changing the city forever. Now, Giga City stands as a
 // testament to what can happen when the balance is lost.
 
-// ... mfer. Listen. I really appreciate you checking out the project.
-// Not sure how you got here. But I have been working on GC almost every
-// night for a while now. I've poured every last drip of blood and sweat
-// into this thing so I hope it fucking shows. No matter if you own this
-// GC or not, no matter if you just flip it and move on or hold. Thank
-// you for checking it out.
-//
-// But I'll do everything that I can to get you on this ship with me!
-
 // =============================================================
 //                          ASSOCIATES
 // =============================================================
-
-abstract contract GigaCityContract {
-    function implant(address to) external virtual;
-}
 
 abstract contract FilthyPeasantsContract {
     function ownerOf(uint tokenId) external virtual view returns(address);
 }
 
 // =============================================================
-//                           Memory Chip
+//                           Giga City
 // =============================================================
 
-contract MemoryChip is
+contract GigaCity is
     ERC721AQueryable,
     ReentrancyGuard,
     Ownable {
@@ -80,12 +66,6 @@ contract MemoryChip is
 
     // Users cant trade the NFT by default
     bool public businessOpen;
-
-    // Let's get on with it
-    bool public canImplant;
-
-    // Where is GC at?
-    address public gigaCityContract;
 
     // █▒░ PEASANTS ░▒█
 
@@ -120,7 +100,6 @@ contract MemoryChip is
 
     error BusinessClosed();
     error WithdrawlFailed();
-    error NoCashForMint();
     error SupplyExceeded();
     error AddressQuantityExceeded();
     error NoFilthyMintYet();
@@ -128,11 +107,17 @@ contract MemoryChip is
     error NoBotMintYet();
     error CantMintThisFilthy();
     error CantMintCorpo();
-    error CantImplantNow();
     error PeasantAlreadyMinted();
-    error ChipDoesNotExist();
+    error CypherPunkDoesNotExist();
     error CantIncreaseSupply();
+    error CantDecreaseSupply();
+    error IncorrectETHSent();
 
+    event URISuffixUpdated(string previous, string current);
+    event BaseURIChanged(string previous, string current);
+    event SupplyCapChanged(uint256 previous, uint256 current);
+
+ 
     // =============================================================
     //                            CONSTRUCTOR
     // =============================================================
@@ -152,26 +137,6 @@ contract MemoryChip is
     }
 
     // =============================================================
-    //                        MAKING THE DEAL
-    // =============================================================
-
-    function implant(uint256 cardId_) external nonReentrant() {
-        // If implanting is closed, you can't make a deal brother.
-        if (!canImplant) revert CantImplantNow();
-        // If you are not owner you can't make a deal.
-        // We don't need to check the ownership here.
-        // _burn will revert if you are not the owner.
-        // Thus I think we can comment this shit out.
-        // if (_msgSenderERC721A() != ownerOf(cardId_)) revert NotYourMemoryChip();
-        // Burn this token.
-        _burn(cardId_, true);
-        // We will be using other contract.
-        GigaCityContract factory = GigaCityContract(gigaCityContract);
-        // And finally mint a new one.
-        factory.implant(_msgSenderERC721A());
-    }
-
-    // =============================================================
     //                          MINT HELPERS
     // =============================================================
 
@@ -187,7 +152,7 @@ contract MemoryChip is
 
     function _hasEnoughCash(uint256 quantity_) private view {
         // Are you sending enough cash for mint?
-        if (msg.value < mintPrice * quantity_) revert NoCashForMint();
+        if (msg.value != mintPrice * quantity_) revert IncorrectETHSent();
     }
 
     // =============================================================
@@ -217,7 +182,7 @@ contract MemoryChip is
         // peasants need reserved capacity to mint.
         // _isWithinSupply(_quantity);
         // Are you filthy?
-        if (FilthyPeasantsContract(filthyContract).ownerOf(peasantId_) != _msgSenderERC721A()) revert CantMintThisFilthy();
+        if (FilthyPeasantsContract(filthyContract).ownerOf(peasantId_) != msg.sender) revert CantMintThisFilthy();
         // Has the peasant been redeemed?
         if (_peasantsMinted[peasantId_] == true) revert PeasantAlreadyMinted();
         // If not, it is redeemed now
@@ -225,7 +190,7 @@ contract MemoryChip is
         // We need to know how many filthys have minted
         _filthyMintCounter += 1;
         // And we finally mint.
-        _mint(_msgSenderERC721A(), 2);
+        _mint(msg.sender, 2);
     }
 
     // =============================================================
@@ -241,12 +206,12 @@ contract MemoryChip is
         // Is the address overallocating?
         _isWithinWalletLimit(quantity_);
         // Are you actualy privileged?
-        bytes32 leaf = keccak256(abi.encodePacked(_msgSenderERC721A()));
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         if (!MerkleProofLib.verify(proof_, _corpoRoot, leaf)) revert CantMintCorpo();
         // Do you have enough cash?
         _hasEnoughCash(quantity_);
         // We continue minting. 
-        _mint(_msgSenderERC721A(), quantity_);
+        _mint(msg.sender, quantity_);
     }
 
     // =============================================================
@@ -263,20 +228,12 @@ contract MemoryChip is
         // Do you have enough cash?
         _hasEnoughCash(quantity_);
         // If you are good, you are good.
-        _mint(_msgSenderERC721A(), quantity_);
+        _mint(msg.sender, quantity_);
     }
 
     // =============================================================
     //                              INFO
     // =============================================================
-
-    function chipsImplanted(address addr_) external view returns (uint256) {
-        return _numberBurned(addr_);
-    }
-
-    function totalChipsImplanted() external view returns (uint256) {
-        return _totalBurned();
-    }
 
     function peasantMinted(uint256 peasantId_) external view returns (bool) {
         return _peasantsMinted[peasantId_] == true;
@@ -290,7 +247,7 @@ contract MemoryChip is
     //                              METADATA
     // =============================================================
 
-    function _startTokenId() internal view virtual override returns (uint256) {
+    function _startTokenId() internal view override returns (uint256) {
         return 1;
     }
 
@@ -299,11 +256,11 @@ contract MemoryChip is
     }
 
     function tokenURI(uint256 tokenId_) public view override(ERC721A, IERC721A) returns (string memory) {
-        if (!_exists(tokenId_)) revert ChipDoesNotExist();
+        if (!_exists(tokenId_)) revert CypherPunkDoesNotExist();
 
         string memory currentBaseURI = _baseURI();
         return bytes(currentBaseURI).length > 0
-            ? string(abi.encodePacked(currentBaseURI, LibString.toString(tokenId_), _uriSuffix))
+            ? string(abi.encodePacked(currentBaseURI, _toString(tokenId_), _uriSuffix))
             : '';
     }
 
@@ -312,15 +269,15 @@ contract MemoryChip is
     // =============================================================
 
     function setBaseURI(string calldata baseURI_) external onlyOwner {
+        string memory prev = _baseTokenURI;
         _baseTokenURI = baseURI_;
+        emit BaseURIChanged(prev, baseURI_);
     }
 
     function setURISuffix(string calldata uriSuffix_) external onlyOwner {
+        string memory prev = _uriSuffix;
         _uriSuffix = uriSuffix_;
-    }
-
-    function setGigaCityContract(address contractAddress_) external onlyOwner {
-        gigaCityContract = contractAddress_;
+        emit URISuffixUpdated(prev, uriSuffix_);
     }
 
     function setCorpoRoot(bytes32 newRoot_) external onlyOwner {
@@ -337,7 +294,8 @@ contract MemoryChip is
 
     function setSupplyCap(uint256 supplyCap_) external onlyOwner {
         if (supplyCap_ > supplyCap) revert CantIncreaseSupply();
-
+        if (supplyCap_ < _totalMinted()) revert CantDecreaseSupply();
+        emit SupplyCapChanged(supplyCap, supplyCap_);
         supplyCap = supplyCap_;
     }
 
@@ -347,10 +305,6 @@ contract MemoryChip is
 
     function toggleBotMint() external onlyOwner {
         botMint = !botMint;
-    }
-
-    function toggleImplant() external onlyOwner {
-        canImplant = !canImplant;
     }
 
     function toggleFilthyMint() public onlyOwner {
