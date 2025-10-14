@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.20;
 
+import "solmate/utils/MerkleProofLib.sol";
+import "solmate/utils/LibString.sol";
+import "solmate/utils/ReentrancyGuard.sol";
 import "@limitbreak/creator-token-standards/src/access/OwnableBasic.sol";
 import "@limitbreak/creator-token-standards/src/erc721c/ERC721AC.sol";
 import "@limitbreak/creator-token-standards/src/programmable-royalties/BasicRoyalties.sol";
@@ -9,23 +12,34 @@ import "@limitbreak/creator-token-standards/src/programmable-royalties/BasicRoya
 //                            GigaCity
 // =============================================================
 
-contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
+contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
 
     // █▒░ PUBLIC ░▒█
 
-    uint256 public supplyCap;
+    uint256 public supplyCap = 10000;
     uint256 public maxMintPerAddress;
     uint256 public mintPrice;
 
-    // █▒░ PRIVATE ░▒█
+    // █▒░ DATA ░▒█
 
     string private _baseTokenURI;
-    string private _uriSuffix = '';
+    string private _uriSuffix;
+    bytes32 private _corpoRoot;
 
     // █▒░ CONTROLS ░▒█
 
     bool public corpoMint;
     bool public botMint;
+
+    // █▒░ WHO KNOWS ░▒█
+    bool public countdownInitiated;
+
+    // =============================================================
+    //                            EVENTS
+    // =============================================================
+
+    event BaseURIChanged(string newBaseURI);
+    event URISuffixChanged(string newSuffix);
 
     // =============================================================
     //                            ERRORS
@@ -34,7 +48,11 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
     error CorpoMintClosed();
     error BotMintClosed();
     error SupplyExceeded();
+    error NoCashForMint();
     error AddressQuantityExceeded();
+    error CantMintCorpo();
+    error TokenDoesNotExist();
+    error WithdrawlFailed();
 
     // =============================================================
     //                          CONSTRUCTOR
@@ -42,11 +60,23 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
 
     constructor(address royaltyReceiver_)
         ERC721AC("Giga City", "GC")
-        BasicRoyalties(royaltyReceiver_, 333) {
+        BasicRoyalties(royaltyReceiver_, 333)
+        Ownable(msg.sender) {
+
+        maxMintPerAddress = 10;
+        mintPrice = 0;
+
+        corpoMint = false;
+        botMint = false;
+
+        _baseTokenURI = '';
+        _uriSuffix = '';
+
+        countdownInitiated = false;
     }
 
     // =============================================================
-    //                           HELPERS
+    //                            HELPERS
     // =============================================================
 
     function _isWithinSupply(uint256 quantity_) private view {
@@ -56,7 +86,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
 
     function _isWithinWalletLimit(uint256 quantity_) private view {
         // Did the user already exceed the allowed limit?
-        if (_numberMinted(_msgSenderERC721A()) + quantity_ > maxMintPerAddress) revert AddressQuantityExceeded();
+        if (_numberMinted(msg.sender) + quantity_ > maxMintPerAddress) revert AddressQuantityExceeded();
     }
 
     function _hasEnoughCash(uint256 quantity_) private view {
@@ -76,16 +106,26 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
         _mint(address_, quantity_);
     }
 
-    // function mint(address to, uint256 quantity) external {
-    //     // Are we exceeding our supply cap?
-    //     if (supplyCap < _totalMinted()) revert SupplyExceeded();
-    //     // Did the user already exceed the allowed limit?
-    //     if (_numberMinted(_msgSenderERC721A()) + quantity_ > maxMintPerAddress) revert AddressQuantityExceeded();
-    //     // Are you sending enough cash for mint?
-    //     if (msg.value < mintPrice * quantity_) revert NoCashForMint();
-
-    //     _mint(to, quantity);
-    // }
+    function mintCorpo(bytes32[] calldata proof_, uint256 quantity_) external payable {
+        // Is corpo mint on?
+        if (!corpoMint) revert CorpoMintClosed();
+        // Are we exceeding a supply cap?
+        _isWithinSupply(quantity_);
+        // Is the address overallocating?
+        _isWithinWalletLimit(quantity_);
+        // Are you actualy corpo?
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        if (!MerkleProofLib.verify(proof_, _corpoRoot, leaf)) revert CantMintCorpo();
+        // Do you have enough cash?
+        _hasEnoughCash(quantity_);
+        // Refund in case
+        uint256 cost = mintPrice * quantity_;
+        if (msg.value > cost) {
+            payable(msg.sender).transfer(msg.value - cost);
+        }
+        // We continue minting. 
+        _mint(msg.sender, quantity_);
+    }
 
     function mintBot(uint256 quantity_) external payable {
         // Is the public mint on?
@@ -97,25 +137,14 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
         // Do you have enough cash?
         _hasEnoughCash(quantity_);
         // If you are good, you are good.
-        _mint(_msgSenderERC721A(), quantity_);
+        _mint(msg.sender, quantity_);
     }
-
-
-
-
-    // function safeMint(address to, uint256 quantity) external {
-    //     _safeMint(to, quantity);
-    // }
-
-    // function burn(uint256 tokenId) external {
-    //     _burn(tokenId);
-    // }
 
     // =============================================================
     //                           METADATA
     // =============================================================
 
-    function _startTokenId() internal view virtual override returns (uint256) {
+    function _startTokenId() internal pure override returns (uint256) {
         return 1;
     }
 
@@ -123,8 +152,8 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
         return _baseTokenURI;
     }
 
-    function tokenURI(uint256 tokenId_) public view override(ERC721A, IERC721A) returns (string memory) {
-        if (!_exists(tokenId_)) revert ChipDoesNotExist();
+    function tokenURI(uint256 tokenId_) public view override returns (string memory) {
+        if (!_exists(tokenId_)) revert TokenDoesNotExist();
 
         string memory currentBaseURI = _baseURI();
         return bytes(currentBaseURI).length > 0
@@ -138,10 +167,12 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
 
     function setBaseURI(string calldata baseURI_) external onlyOwner {
         _baseTokenURI = baseURI_;
+        emit BaseURIChanged(baseURI_);
     }
 
     function setURISuffix(string calldata uriSuffix_) external onlyOwner {
         _uriSuffix = uriSuffix_;
+        emit URISuffixChanged(uriSuffix_);
     }
 
     function setCorpoRoot(bytes32 newRoot_) external onlyOwner {
@@ -156,12 +187,21 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties {
         mintPrice = mintPrice_;
     }
 
-    function toggleCorpoMint() public onlyOwner {
+    function toggleCorpoMint() external onlyOwner {
         corpoMint = !corpoMint;
     }
 
     function toggleBotMint() external onlyOwner {
         botMint = !botMint;
+    }
+    
+    function initiateCountdown() external onlyOwner {
+        countdownInitiated = true;
+    }
+
+    function withdraw() external onlyOwner nonReentrant {
+      (bool success, ) = msg.sender.call{value: address(this).balance}("");
+      if (!success) revert WithdrawlFailed();
     }
 
     // =============================================================

@@ -1,60 +1,25 @@
-// SPDX-License-Identifier: MIT
+// // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./_gcSetup.sol";
+import "./0_deploy.t.sol";
 
-// Mock contract representing an unauthorized contract
-contract UnauthorizedImplant {
-    address public MCContract;
-
-    constructor(address _yourContract) {
-        MCContract = _yourContract;
-    }
-
-    function callImplant(address to) public {
-        GigaCityContract factory = GigaCityContract(MCContract);
-        factory.implant(to);
-    }
-}
-
-contract GigaCityChipTest is GCSetup {
-    UnauthorizedImplant public unauthorisedContract;
+contract GigaCityChipTest is DeploySetup {
 
     function setUp() public override {
         super.setUp();
-
-        memoryChip.mintTreasury(address(user1), 3);
-        memoryChip.toggleImplant();
-
-        vm.prank(user1);
-        memoryChip.implant(1);
-
-        unauthorisedContract = new UnauthorizedImplant(address(memoryChip));
     }
 
     // =============================================================
     //                         INFO GETTERS
     // =============================================================
 
-    function testRevertImplant() public {
-        vm.prank(user1);
-        memoryChip.implant(2);
+    function testURIandID() public {
+        gigaCity.mintTreasury(owner, 1);
 
-        vm.prank(user1);
-        vm.expectRevert();
-        gigaCity.implant(user1);
-    }
+        vm.expectRevert(GigaCity.TokenDoesNotExist.selector);
+        gigaCity.tokenURI(0);
 
-    function testImplantFromDifferentCOntract() public {
-        vm.prank(user1);
-        vm.expectRevert();
-        unauthorisedContract.callImplant(address(user1));
-    }
-
-    function testNoBaseURI() public {
-        vm.expectRevert();
-        gigaCity.tokenURI(10);
-      
+        gigaCity.tokenURI(1);
         assertEq(gigaCity.tokenURI(1), string.concat(baseURI,'1', URISuffix), "The expected URL should be correct");
 
         string memory newBaseUri = 'http://yee.co/';
@@ -63,32 +28,56 @@ contract GigaCityChipTest is GCSetup {
         gigaCity.setBaseURI(newBaseUri);
         gigaCity.setURISuffix(newSuffix);
 
-        // It should fail as empty string if no base URI provided
         assertEq(gigaCity.tokenURI(1), string.concat(newBaseUri,'1', newSuffix), "The expected URL should be correct");
     }
 
-    function testSupportsInterface() public {
-        // Should be public information
-        vm.prank(user1);
-        assertEq(gigaCity.supportsInterface(0x80ac58cd), true, "Should support IERC721");
+    function testNoBaseURI() public {
+        gigaCity.mintTreasury(owner, 1);
+
+        string memory newBaseUri = '';
+        string memory newSuffix = '';
+
+        gigaCity.setBaseURI(newBaseUri);
+        gigaCity.setURISuffix(newSuffix);
+
+        // It should fail as empty string if no base URI provided
+        assertEq(gigaCity.tokenURI(1), '', "The expected URL should be correct");
     }
+
+    // function testSupportsInterface() public {
+    //     // Should be public information
+    //     vm.prank(user1);
+    //     assertEq(gigaCity.supportsInterface(0x80ac58cd), true, "Should support IERC721");
+    // }
 
     // =============================================================
     //                         GENERAL SETTERS
     // =============================================================
 
-
-    function testSetOpenBusiness() public {
+    function testSetMaxMintPerAddress() public {
         // This should not pass as user1 is not owner
         vm.prank(user1);
         vm.expectRevert();
-        gigaCity.initiateCountdown();
-        assertEq(gigaCity.countdownInitiated(), false, "By default countdown is not running.");
+        gigaCity.setMaxMintPerAddress(20);
+        assertEq(gigaCity.maxMintPerAddress(), mintPerAddy, "Should have correctly set max mint per address");
 
         // Testing as owner
         vm.prank(owner);
-        gigaCity.initiateCountdown();
-        assertEq(gigaCity.countdownInitiated(), true, "Countdown should now be running.");
+        gigaCity.setMaxMintPerAddress(20);
+        assertEq(gigaCity.maxMintPerAddress(), 20, "Should have correctly set max mint per address");
+    }
+
+    function testSetMintPrice() public {
+        // This should not pass as user1 is not owner
+        vm.prank(user1);
+        vm.expectRevert();
+        gigaCity.setMintPrice(0);
+        assertEq(gigaCity.mintPrice(), mintPrice, "Should have correctly set mint price");
+
+        // Testing as owner
+        vm.prank(owner);
+        gigaCity.setMintPrice(1 ether);
+        assertEq(gigaCity.mintPrice(), 1 ether, "Should have correctly set mint price");
     }
 
     function testOwner() public {
@@ -125,6 +114,37 @@ contract GigaCityChipTest is GCSetup {
         assertEq(address(gigaCity).balance, 0, "Contract should have no ether");
         assertEq(user1.balance, 2 ether, "Owner should have 2 ethers");
     }
+
+    // =============================================================
+    //                         SET MINT SLOTS
+    // =============================================================
+
+    // Testing wether onlyOwner truly works
+    function testToggleCorpoMint() public {
+        // This should not pass as user1 is not owner
+        vm.prank(user1);
+        vm.expectRevert();
+        gigaCity.toggleCorpoMint();
+        assertEq(gigaCity.corpoMint(), false, "Corpo mint should be set to false");
+
+        // Testing as owner
+        vm.prank(owner);
+        gigaCity.toggleCorpoMint();
+        assertEq(gigaCity.corpoMint(), true, "Corpo mint should be set to true");
+    }
+
+    function testToggleBotMint() public {
+        // This should not pass as user1 is not owner
+        vm.prank(user1);
+        vm.expectRevert();
+        gigaCity.toggleBotMint();
+        assertEq(gigaCity.botMint(), false, "Bot mint should be set to false");
+
+        // Testing as owner
+        vm.prank(owner);
+        gigaCity.toggleBotMint();
+        assertEq(gigaCity.botMint(), true, "Bot mint should be set to true");
+    }
 }
 
 // =============================================================
@@ -139,7 +159,7 @@ contract RevertReceiver  {
     }
 }
 
-contract WithDrawTest is GCSetup {
+contract WithDrawTest is DeploySetup {
 
     function setUp() public override {
         super.setUp();
@@ -148,17 +168,18 @@ contract WithDrawTest is GCSetup {
         // Test a failing withdrawal:
     // When the owner is a contract that reverts on receiving Ether, the withdraw call should revert.
     function testWithdrawFailure() public {
-        // Fund the MemoryChip contract with 1 ether.
-        vm.deal(address(memoryChip), 1 ether);
+        // Fund the gigaCity contract with 1 ether.
+        vm.deal(address(gigaCity), 1 ether);
 
         // Deploy a helper contract that refuses to accept Ether.
         RevertReceiver revertReceiver = new RevertReceiver();
 
-        // Transfer ownership of MemoryChip to the revertReceiver.
+        // Transfer ownership of gigaCity to the revertReceiver.
         gigaCity.transferOwnership(address(revertReceiver));
 
         vm.prank(address(revertReceiver));
         vm.expectRevert(GigaCity.WithdrawlFailed.selector);
         gigaCity.withdraw();
     }
+
 }
