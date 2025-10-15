@@ -1,16 +1,42 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+// =============================================================
+//                           ROCKSTARS
+// =============================================================
+
+// Thank you for all the open source work.
+
 import "solmate/utils/MerkleProofLib.sol";
 import "solmate/utils/LibString.sol";
 import "solmate/utils/ReentrancyGuard.sol";
+import "solady/utils/SafeTransferLib.sol";
 import "@limitbreak/creator-token-standards/src/access/OwnableBasic.sol";
 import "@limitbreak/creator-token-standards/src/erc721c/ERC721AC.sol";
 import "@limitbreak/creator-token-standards/src/programmable-royalties/BasicRoyalties.sol";
 
 // =============================================================
-//                            GigaCity
+//
+//   ▄████  ██▓  ▄████  ▄▄▄       ▄████▄   ██▓▄▄▄█████▓▓██   ██▓
+//  ██▒ ▀█▒▓██▒ ██▒ ▀█▒▒████▄    ▒██▀ ▀█  ▓██▒▓  ██▒ ▓▒ ▒██  ██▒
+// ▒██░▄▄▄░▒██▒▒██░▄▄▄░▒██  ▀█▄  ▒▓█    ▄ ▒██▒▒ ▓██░ ▒░  ▒██ ██░
+// ░▓█  ██▓░██░░▓█  ██▓░██▄▄▄▄██ ▒▓▓▄ ▄██▒░██░░ ▓██▓ ░   ░ ▐██▓░
+// ░▒▓███▀▒░██░░▒▓███▀▒ ▓█   ▓██▒▒ ▓███▀ ░░██░  ▒██▒ ░   ░ ██▒▓░
+//  ░▒   ▒ ░▓   ░▒   ▒  ▒▒   ▓▒█░░ ░▒ ▒  ░░▓    ▒ ░░      ██▒▒▒ 
+//   ░   ░  ▒ ░  ░   ░   ▒   ▒▒ ░  ░  ▒    ▒ ░    ░     ▓██ ░▒░ 
+// ░ ░   ░  ▒ ░░ ░   ░   ░   ▒   ░         ▒ ░  ░       ▒ ▒ ░░  
+//       ░  ░        ░       ░  ░░ ░       ░            ░ ░     
+//                              ░                      ░ ░     
+//
+// Welcome to GC, a place that's seen it all. This
+// city was once vibrant, but it fell victim to greed
+// and insatiable need for control. Misguided policies
+// and a relentless pursuit of wealth centralization sparked social
+// unrest, changing the city forever. Now, Giga City stands as a
+// testament to what can happen when the balance is lost.
+//
 // =============================================================
+
 
 contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
 
@@ -32,6 +58,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
     bool public botMint;
 
     // █▒░ WHO KNOWS ░▒█
+    
     bool public countdownInitiated;
 
     // =============================================================
@@ -58,17 +85,16 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
     error AddressQuantityExceeded();
     error CantMintCorpo();
     error TokenDoesNotExist();
-    error WithdrawlFailed();
     error InvalidAddress();
 
     // =============================================================
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(address royaltyReceiver_)
+    constructor(address royaltyReceiver_, address owner_)
         ERC721AC("Giga City", "GC")
         BasicRoyalties(royaltyReceiver_, 333)
-        Ownable(msg.sender) {
+        Ownable(owner_) {
 
         maxMintPerAddress = 10;
         mintPrice = 0;
@@ -132,7 +158,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
         // Refund
         uint256 cost = mintPrice * quantity_;
         if (msg.value > cost) {
-            payable(msg.sender).transfer(msg.value - cost);
+            SafeTransferLib.safeTransferETH(msg.sender, msg.value - cost);
         }
     }
 
@@ -150,7 +176,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
         // Refund
         uint256 cost = mintPrice * quantity_;
         if (msg.value > cost) {
-            payable(msg.sender).transfer(msg.value - cost);
+            SafeTransferLib.safeTransferETH(msg.sender, msg.value - cost);
         }
     }
 
@@ -220,8 +246,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
     }
 
     function withdraw() external onlyOwner nonReentrant {
-        (bool success, ) = msg.sender.call{value: address(this).balance}("");
-        if (!success) revert WithdrawlFailed();
+        SafeTransferLib.safeTransferETH(msg.sender, address(this).balance);
     }
 
     // =============================================================

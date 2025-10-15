@@ -56,4 +56,29 @@ contract GigaCityChipTest is DeploySetup {
         gigaCity.mintBot{value: 0.01 ether}(1);
         vm.stopPrank();
     }
+
+        function testBotMintRefundsExcessETH() public {
+        uint256 initialBalance = user1.balance;
+
+        // Send more ETH than needed (0.1 instead of 0.02)
+        vm.prank(user1);
+        gigaCity.mintBot{value: 0.1 ether}(2);
+
+        // User should be refunded excess
+        uint256 finalBalance = user1.balance;
+        assertEq(finalBalance, initialBalance - 0.02 ether, "Should refund excess ETH");
+        assertEq(gigaCity.balanceOf(user1), 2, "Should have minted 2 tokens");
+    }
+
+    function testBotMintExactPayment() public {
+        uint256 initialBalance = user3.balance;
+
+        // Send exact amount
+        vm.prank(user3);
+        gigaCity.mintBot{value: 0.01 ether}(1);
+
+        uint256 finalBalance = user3.balance;
+        assertEq(finalBalance, initialBalance - 0.01 ether, "Should pay exact amount");
+        assertEq(gigaCity.balanceOf(user3), 1, "Should have minted 1 token");
+    }
 }

@@ -65,7 +65,7 @@ contract GigaCityChipTest is DeploySetup {
         vm.stopPrank();
     }
 
-      function testCorpoMintPerAddy() public {
+    function testCorpoMintPerAddy() public {
         bytes32[] memory proof1 = getProof(user1);
         bytes32[] memory proof2 = getProof(user2);
 
@@ -87,5 +87,32 @@ contract GigaCityChipTest is DeploySetup {
         gigaCity.mintCorpo{value: 0.01 ether}(proof2, 1);
         // We cant mint over maxPerAddy
         vm.stopPrank();
+    }
+
+        function testCorpoMintRefundsExcessETH() public {
+        bytes32[] memory proof1 = getProof(user1);
+        uint256 initialBalance = user1.balance;
+
+        // Send more ETH than needed (0.05 instead of 0.01)
+        vm.prank(user1);
+        gigaCity.mintCorpo{value: 0.05 ether}(proof1, 1);
+
+        // User should be refunded excess
+        uint256 finalBalance = user1.balance;
+        assertEq(finalBalance, initialBalance - 0.01 ether, "Should refund excess ETH");
+        assertEq(gigaCity.balanceOf(user1), 1, "Should have minted 1 token");
+    }
+
+        function testCorpoMintExactPayment() public {
+        bytes32[] memory proof2 = getProof(user2);
+        uint256 initialBalance = user2.balance;
+
+        // Send exact amount
+        vm.prank(user2);
+        gigaCity.mintCorpo{value: 0.02 ether}(proof2, 2);
+
+        uint256 finalBalance = user2.balance;
+        assertEq(finalBalance, initialBalance - 0.02 ether, "Should pay exact amount");
+        assertEq(gigaCity.balanceOf(user2), 2, "Should have minted 2 tokens");
     }
 }

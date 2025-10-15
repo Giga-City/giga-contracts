@@ -33,7 +33,7 @@ contract DeploySetup is Test {
         vm.deal(user2, 1 ether);
         vm.deal(user3, 1 ether);
 
-        gigaCity = new GigaCity(address(owner));
+        gigaCity = new GigaCity(address(owner), address(owner));
 
         gigaCity.setBaseURI(baseURI);
         gigaCity.setURISuffix(URISuffix);

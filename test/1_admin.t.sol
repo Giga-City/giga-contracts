@@ -145,6 +145,62 @@ contract GigaCityChipTest is DeploySetup {
         gigaCity.toggleBotMint();
         assertEq(gigaCity.botMint(), true, "Bot mint should be set to true");
     }
+
+    function testInitiateCountdown() public {
+        assertEq(gigaCity.countdownInitiated(), false, "Countdown should start as false");
+
+        gigaCity.initiateCountdown();
+
+        assertEq(gigaCity.countdownInitiated(), true, "Countdown should be true after initiation");
+    }
+
+    function testInitiateCountdownOnlyOwner() public {
+        vm.prank(user1);
+        vm.expectRevert();
+        gigaCity.initiateCountdown();
+
+        assertEq(gigaCity.countdownInitiated(), false, "Countdown should still be false");
+    }
+
+    function testInitiateCountdownMultipleTimes() public {
+        gigaCity.initiateCountdown();
+        assertEq(gigaCity.countdownInitiated(), true, "Should be true");
+
+        // Calling again should not cause issues
+        gigaCity.initiateCountdown();
+        assertEq(gigaCity.countdownInitiated(), true, "Should still be true");
+    }
+}
+
+// =============================================================
+//                   CORPO ROOT TESTS
+// =============================================================
+
+contract CorpoRootTest is DeploySetup {
+    function setUp() public override {
+        super.setUp();
+        gigaCity.toggleCorpoMint();
+    }
+
+    function testSetCorpoRoot() public {
+        bytes32 newRoot = keccak256("new root");
+
+        gigaCity.setCorpoRoot(newRoot);
+
+        // Previous users should no longer be able to mint with old proofs
+        bytes32[] memory oldProof = getProof(user1);
+        vm.prank(user1);
+        vm.expectRevert(GigaCity.CantMintCorpo.selector);
+        gigaCity.mintCorpo{value: 0.01 ether}(oldProof, 1);
+    }
+
+    function testSetCorpoRootOnlyOwner() public {
+        bytes32 newRoot = keccak256("new root");
+
+        vm.prank(user1);
+        vm.expectRevert();
+        gigaCity.setCorpoRoot(newRoot);
+    }
 }
 
 // =============================================================
@@ -178,7 +234,8 @@ contract WithDrawTest is DeploySetup {
         gigaCity.transferOwnership(address(revertReceiver));
 
         vm.prank(address(revertReceiver));
-        vm.expectRevert(GigaCity.WithdrawlFailed.selector);
+        // SafeTransferLib reverts with ETHTransferFailed which doesn't have arguments
+        vm.expectRevert();
         gigaCity.withdraw();
     }
 
