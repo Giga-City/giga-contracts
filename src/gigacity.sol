@@ -58,7 +58,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
     bool public botMint;
 
     // █▒░ WHO KNOWS ░▒█
-    
+
     bool public countdownInitiated;
 
     // =============================================================
@@ -155,7 +155,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
         _hasEnoughCash(quantity_);
         // We continue minting. 
         _safeMint(msg.sender, quantity_);
-        // Refund
+        // Refund, we dont want to deal with dis
         uint256 cost = mintPrice * quantity_;
         if (msg.value > cost) {
             SafeTransferLib.safeTransferETH(msg.sender, msg.value - cost);
@@ -173,7 +173,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
         _hasEnoughCash(quantity_);
         // If you are good, you are good.
         _safeMint(msg.sender, quantity_);
-        // Refund
+        // Refund, we dont want to deal with dis
         uint256 cost = mintPrice * quantity_;
         if (msg.value > cost) {
             SafeTransferLib.safeTransferETH(msg.sender, msg.value - cost);
