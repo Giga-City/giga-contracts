@@ -40,6 +40,12 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
 
     event BaseURIChanged(string newBaseURI);
     event URISuffixChanged(string newSuffix);
+    event CorpoRootChanged();
+    event MaxMintPerAddressChanged(uint256 newMaxMintPerAddress_);
+    event MintPriceChanged(uint256 newMintPrice_);
+    event CorpoMintChanged(bool _newState);
+    event BotMintChanged(bool _newState);
+    event CountdownInitiated();
 
     // =============================================================
     //                            ERRORS
@@ -53,6 +59,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
     error CantMintCorpo();
     error TokenDoesNotExist();
     error WithdrawlFailed();
+    error InvalidAddress();
 
     // =============================================================
     //                          CONSTRUCTOR
@@ -102,6 +109,8 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
     function mintTreasury(address address_, uint256 quantity_) external onlyOwner {
         // Are we exceeding a supply cap?
         _isWithinSupply(quantity_);
+        // No null addresses
+        if (address_ == address(0)) revert InvalidAddress();
         // We mint for free
         _mint(address_, quantity_);
     }
@@ -118,13 +127,13 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
         if (!MerkleProofLib.verify(proof_, _corpoRoot, leaf)) revert CantMintCorpo();
         // Do you have enough cash?
         _hasEnoughCash(quantity_);
-        // Refund in case
+        // We continue minting. 
+        _safeMint(msg.sender, quantity_);
+        // Refund
         uint256 cost = mintPrice * quantity_;
         if (msg.value > cost) {
             payable(msg.sender).transfer(msg.value - cost);
         }
-        // We continue minting. 
-        _mint(msg.sender, quantity_);
     }
 
     function mintBot(uint256 quantity_) external payable {
@@ -137,7 +146,12 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
         // Do you have enough cash?
         _hasEnoughCash(quantity_);
         // If you are good, you are good.
-        _mint(msg.sender, quantity_);
+        _safeMint(msg.sender, quantity_);
+        // Refund
+        uint256 cost = mintPrice * quantity_;
+        if (msg.value > cost) {
+            payable(msg.sender).transfer(msg.value - cost);
+        }
     }
 
     // =============================================================
@@ -177,31 +191,37 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
 
     function setCorpoRoot(bytes32 newRoot_) external onlyOwner {
         _corpoRoot = newRoot_;
+        emit CorpoRootChanged();
     }
 
     function setMaxMintPerAddress(uint256 maxMintPerAddress_) external onlyOwner {
         maxMintPerAddress = maxMintPerAddress_;
+        emit MaxMintPerAddressChanged(maxMintPerAddress_);
     }
 
     function setMintPrice(uint256 mintPrice_) external onlyOwner {
         mintPrice = mintPrice_;
+        emit MintPriceChanged(mintPrice_);
     }
 
     function toggleCorpoMint() external onlyOwner {
         corpoMint = !corpoMint;
+        emit CorpoMintChanged(corpoMint);
     }
 
     function toggleBotMint() external onlyOwner {
         botMint = !botMint;
+        emit BotMintChanged(botMint);
     }
     
     function initiateCountdown() external onlyOwner {
         countdownInitiated = true;
+        emit CountdownInitiated();
     }
 
     function withdraw() external onlyOwner nonReentrant {
-      (bool success, ) = msg.sender.call{value: address(this).balance}("");
-      if (!success) revert WithdrawlFailed();
+        (bool success, ) = msg.sender.call{value: address(this).balance}("");
+        if (!success) revert WithdrawlFailed();
     }
 
     // =============================================================
