@@ -39,7 +39,7 @@ contract OwnershipTest is DeploySetup {
     function testOwnerIsSetCorrectlyInConstructor() public {
         // Deploy with specific owner
         address expectedOwner = user1;
-        GigaCity gc = new GigaCity(user2, expectedOwner);
+        GigaCity gc = new GigaCity(expectedOwner);
 
         assertEq(gc.owner(), expectedOwner, "Owner should be the address passed to constructor");
     }
@@ -47,7 +47,7 @@ contract OwnershipTest is DeploySetup {
     function testOwnerIsNotDeployer() public {
         // Deploy from this contract but set owner to user1
         address expectedOwner = user1;
-        GigaCity gc = new GigaCity(user2, expectedOwner);
+        GigaCity gc = new GigaCity(expectedOwner);
 
         assertEq(gc.owner(), expectedOwner, "Owner should be user1");
         assertTrue(gc.owner() != address(this), "Owner should not be the deployer");
@@ -55,13 +55,12 @@ contract OwnershipTest is DeploySetup {
 
     function testCREATE2FactoryDeploymentOwnership() public {
         // Set up the deployment
-        address royaltyReceiver = user2;
         address intendedOwner = user1;
 
         // Create the deployment bytecode with constructor args
         bytes memory bytecode = abi.encodePacked(
             type(GigaCity).creationCode,
-            abi.encode(royaltyReceiver, intendedOwner)
+            abi.encode(intendedOwner)
         );
 
         bytes32 salt = keccak256("test-salt");
@@ -84,12 +83,11 @@ contract OwnershipTest is DeploySetup {
 
     function testCREATE2FactoryCannotCallOwnerFunctions() public {
         // Set up the deployment
-        address royaltyReceiver = user2;
         address intendedOwner = user1;
 
         bytes memory bytecode = abi.encodePacked(
             type(GigaCity).creationCode,
-            abi.encode(royaltyReceiver, intendedOwner)
+            abi.encode(intendedOwner)
         );
 
         bytes32 salt = keccak256("test-salt-2");
@@ -105,7 +103,7 @@ contract OwnershipTest is DeploySetup {
     function testDeployerCannotCallOwnerFunctions() public {
         // Deploy from this contract but set owner to user1
         address expectedOwner = user1;
-        GigaCity gc = new GigaCity(user2, expectedOwner);
+        GigaCity gc = new GigaCity(expectedOwner);
 
         // Deployer (this contract) should NOT be able to call owner functions
         vm.expectRevert();
@@ -114,7 +112,7 @@ contract OwnershipTest is DeploySetup {
 
     function testOwnerCanWithdraw() public {
         address expectedOwner = user1;
-        GigaCity gc = new GigaCity(user2, expectedOwner);
+        GigaCity gc = new GigaCity(expectedOwner);
 
         // Send some ETH to the contract
         vm.deal(address(gc), 1 ether);
@@ -130,7 +128,7 @@ contract OwnershipTest is DeploySetup {
 
     function testNonOwnerCannotWithdraw() public {
         address expectedOwner = user1;
-        GigaCity gc = new GigaCity(user2, expectedOwner);
+        GigaCity gc = new GigaCity(expectedOwner);
 
         // Send some ETH to the contract
         vm.deal(address(gc), 1 ether);
@@ -142,9 +140,8 @@ contract OwnershipTest is DeploySetup {
     }
 
     function testRoyaltyReceiverIsIndependentOfOwner() public {
-        address royaltyReceiver = user2;
         address owner = user1;
-        GigaCity gc = new GigaCity(royaltyReceiver, owner);
+        GigaCity gc = new GigaCity(owner);
 
         // Mint a token to test royalty info
         vm.prank(owner);
@@ -153,7 +150,7 @@ contract OwnershipTest is DeploySetup {
         // Check royalty info
         (address receiver, uint256 royaltyAmount) = gc.royaltyInfo(1, 10000);
 
-        assertEq(receiver, royaltyReceiver, "Royalty receiver should be set correctly");
+        assertEq(receiver, owner, "Royalty receiver should be set correctly");
         assertEq(royaltyAmount, 333, "Royalty amount should be 333 (3.33%)");
     }
 }

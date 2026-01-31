@@ -44,6 +44,10 @@ and then verify:
 forge verify-contract {contract address} GigaCity --chain-id {chain_id} --etherscan-api-key {etherscan api} --constructor-args $(cast abi-encode "constructor(address)" "{mc_contract}" "{owner}")
 ```
 
+or using script with custom salt:
+
+forge script script/deployGC.s.sol:DeployScript --rpc-url "https://ethereum-sepolia-rpc.publicnode.com" --private-key {} --broadcast
+
 ## Local Anvil testing
 
 With the last update, I added an option to deploy contracts to local anvil, so that the testing is a bit easier.

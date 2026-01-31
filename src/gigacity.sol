@@ -8,7 +8,6 @@ pragma solidity ^0.8.20;
 // Thank you for all the open source work.
 
 import "solmate/utils/MerkleProofLib.sol";
-import "solmate/utils/LibString.sol";
 import "solmate/utils/ReentrancyGuard.sol";
 import "solady/utils/SafeTransferLib.sol";
 import "@limitbreak/creator-token-standards/src/access/OwnableBasic.sol";
@@ -42,7 +41,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
 
     // █▒░ PUBLIC ░▒█
 
-    uint256 public supplyCap = 10000;
+    uint256 public supplyCap = 3333;
     uint256 public maxMintPerAddress;
     uint256 public mintPrice;
 
@@ -91,10 +90,10 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
     //                          CONSTRUCTOR
     // =============================================================
 
-    constructor(address royaltyReceiver_, address owner_)
-        ERC721AC("Giga City", "GC")
+    constructor(address royaltyReceiver_)
+        ERC721AC("Giga City", "GIGA")
         BasicRoyalties(royaltyReceiver_, 333)
-        Ownable(owner_) {
+        Ownable() {
 
         maxMintPerAddress = 10;
         mintPrice = 0;
@@ -106,6 +105,8 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
         _uriSuffix = '';
 
         countdownInitiated = false;
+
+        _transferOwnership(royaltyReceiver_);
     }
 
     // =============================================================
@@ -197,7 +198,7 @@ contract GigaCity is OwnableBasic, ERC721AC, BasicRoyalties, ReentrancyGuard {
 
         string memory currentBaseURI = _baseURI();
         return bytes(currentBaseURI).length > 0
-            ? string(abi.encodePacked(currentBaseURI, LibString.toString(tokenId_), _uriSuffix))
+            ? string(abi.encodePacked(currentBaseURI, _toString(tokenId_), _uriSuffix))
             : '';
     }
 
